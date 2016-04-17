@@ -14,7 +14,7 @@ For executing this project you need
 <li> sudo -E pip install -r requirements.txt
 </ul>
 
-Steps to rrun
+Steps to run
 <ul>
 <li> Execute python daemon
 <li> Run index.html on a bootstrap supported browser
