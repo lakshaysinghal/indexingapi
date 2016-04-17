@@ -1,0 +1,135 @@
+<html>
+
+    <head>
+        <title>
+            Sample Project
+        </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="row">
+                <h1 class="text-center text-primary">Sample Project</h1>
+            </div>
+            <div class="row">
+                <p></p>
+            </div>
+        </div>
+        <form method="post" id="first" action="http://localhost:5000/index/">
+            <div class="container">
+                <div class="form-group row col-md-4 col-md-offset-4">
+                    <input type="text" name="author" class="form-control col-md-4" placeholder="Author" required/>
+                    <input type="text" name="msg" class="form-control col-md-4" placeholder="Message" required/>
+                    <input type="submit" name="submit" value="Submit using POST(/index/)" class="btn btn-primary col-md-offset-4" data-toggle="tooltip" data-placement="bottom" title="Indexing in ElasticSearch & Redis" />
+                </div>
+            </div>
+
+        </form>
+        <form method="get" id="second" action="http://localhost:5000/index/">
+            <div class="container">
+                <div class="form-group row col-md-4 col-md-offset-4">
+                    <input type="text" name="q" class="form-control col-md-4" placeholder="Author" required/>
+                    <input type="submit" name="submit" value="Submit using GET(/index/)" class="btn btn-primary col-md-offset-4" data-toggle="tooltip" data-placement="bottom" title="Gets data from Redis" />
+                </div>
+            </div>
+        </form>
+        <form method="get" id="third" action="http://localhost:5000/search/">
+            <div class="container">
+                <div class="form-group row col-md-4 col-md-offset-4">
+                    <input type="text" name="q" class="form-control col-md-4" placeholder="Author" required/>
+                    <input type="submit" name="submit" value="Submit using GET(/search/)" class="btn btn-primary col-md-offset-4" data-toggle="tooltip" data-placement="bottom" title="Searches data from ElasticSearch" />
+                </div>
+            </div>
+        </form>
+        <div class="row">
+            <div id="result" class="text-primary lead text-center"></div>
+        </div>
+        <script>
+            $("#first").submit(function(event) {
+                event.preventDefault();
+                var $form = $(this),
+                    term1 = $form.find("input[name='author']").val(),
+                    term2 = $form.find("input[name='msg']").val(),
+                    url = $form.attr("action");
+
+                var posting = $.post(url, {
+                    author: term1,
+                    msg: term2
+                }, function(data) {
+                    console.log(data);
+                    $("#result").empty().append("<h1>" + data + "</h1>");
+                });
+            });
+
+        </script>
+        <script>
+            $("#second").submit(function(event) {
+                event.preventDefault();
+                var $form = $(this),
+                    term = $form.find("input[name='q']").val(),
+                    url = $form.attr("action");
+                var posting = $.get(url, {
+                        q: term
+                    }, function(data) {
+                        console.log(data);
+                        $("#result").empty();
+                        for (var i in data) {
+                            if (data[i] == null) {
+                                $("#result").append("<h1>Author does not exist'!!</h1> <br>");
+                            } else {
+                                console.log(i + " " + data[i]);
+                                $("#result").append("<h1>Author <small>" + i + "</small></h1> <br> <h1>Message <small>" + data[i] + "</small></h1> <br>");
+                            }
+                        }
+                    }, "json")
+                    .fail(function() {
+                        $("#result").append("<h1>Redis Server Error!!</h1> <br>");
+                    });;
+            });
+
+        </script>
+        <script>
+            $("#third").submit(function(event) {
+                event.preventDefault();
+                var $form = $(this),
+                    term = $form.find("input[name='q']").val(),
+                    url = $form.attr("action");
+
+                var posting = $.get(url, {
+                        q: term
+                    }, function(data) {
+                        $("#result").empty();
+                        if (data["data"].length == 0) {
+                            $("#result").append("<h1>Author does not exist'!!</h1> <br>");
+                        } else {
+                            data = data["data"][0];
+                            c = 0;
+                            for (var i in data) {
+                                c = c + 1;
+                                if (c % 2 != 0) {
+                                    $("#result").append("<h1>Author <small>" + data['author'] + "</small></h1> <br> <h1>Message <small>" + data['msg'] + "</small></h1> <br>");
+                                }
+                            }
+                        }
+                    }, "json")
+                    .fail(function() {
+                        $("#result").append("<h1>ElasticSearch Server Error!!</h1> <br>");
+                    });;;
+            });
+
+        </script>
+        <script>
+            $(document).ready(function() {
+                $("body").tooltip({
+                    selector: '[data-toggle=tooltip]'
+                });
+            });
+
+        </script>
+    </body>
+
+</html>
